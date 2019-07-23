@@ -39,5 +39,23 @@ app.get("/scrape", function (req, res) {
     });
 });
 
+//retrieve data from our mongodb  (database: techNews, collection: Article)
+
+app.get('/', (req, res) => {
+    db.Article
+      //find all the articles in the collection  
+      .find({})
+      //get another collection related to the articles
+      .populate('note')
+      //once you have all the info
+      .then(dbArticle => { 
+          //send the info to index
+        res.render('index', {data: dbArticle});
+      })
+      //if there is an error, send the error to the client
+      .catch(err => res.json(err) );
+  });
+
+
   
  
