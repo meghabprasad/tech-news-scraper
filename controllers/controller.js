@@ -56,6 +56,18 @@ app.get('/', (req, res) => {
       .catch(err => res.json(err) );
   });
 
-
+//save articles that you like 
+  app.post('/save/:id', function(req, res) {
+    db.Article.update(
+      { _id: req.params.id }, 
+      { $set: { saved: true }}, 
+      function(err, data){
+          if(err){
+              throw err;
+          }
+          res.send("Saved!")
+      }
+    );
+  });
   
  
