@@ -1,6 +1,6 @@
 <header class="top">
-  <h1>Stay Updated on News by</h1>
-  <h2>ECHO JS</h2>
+  <h1>SCRAPING BY</h1>
+  <h2>New York Times Edition</h2>
   {{#if data}}
     <p>Last Scraped</p> 
     <p>{{data.0.dateScraped}}</p>
@@ -8,13 +8,13 @@
 </header>
 <main>
   <section>
-    <h3><button id="new">Get New Articles</button> Articles</h3> 
+    <h3><button id="new">Get New-s</button> Articles</h3> 
     {{#if data}}
       {{#each data}}
         {{#unless this.saved}}
           <article>
             <div class="box">
-              <div class="save" data-id="{{this.id}}">☐</div>
+              <button class="save" data-id="{{this.id}}">Save</button>
             </div>
             <div class="content">
               <a href="{{this.link}}" target="_blank" title="{{this.link}}">
@@ -24,12 +24,6 @@
                 <div class="arrow">↳</div>
                 <p>Scraped: {{this.dateScraped}}</p>
               </div>
-              {{#if this.summary}}
-                <div class="note">
-                  <div class="arrow">↳</div>
-                  <p>Summary: {{this.summary}}</p>
-                </div> 
-              {{/if}}
               {{#if this.note}}
                 <div class="note">
                   <div class="arrow">↳</div>
@@ -80,5 +74,5 @@
   </section>
 </main>
 <footer>
-minimal by design
+Built by Megha Bindiganavale
 </footer>
