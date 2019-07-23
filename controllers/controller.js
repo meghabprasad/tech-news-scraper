@@ -44,113 +44,114 @@ app.get("/scrape", function (req, res) {
 
 app.get('/', (req, res) => {
     db.Article
-      //find all the articles in the collection  
-      .find({})
-      //get another collection related to the articles
-      .populate('note')
-      //once you have all the info
-      .then(dbArticle => { 
-          //send the info to index
-        res.render('index', {data: dbArticle});
-      })
-      //if there is an error, send the error to the client
-      .catch(err => res.json(err) );
-  });
+        //find all the articles in the collection  
+        .find({})
+        //sort the articles by date scraped
+        .sort({dateScraped: -1})
+        //get another collection related to the articles
+        .populate('note')
+        //once you have all the info
+        .then(dbArticle => {
+            //send the info to index
+            res.render('index', { data: dbArticle });
+        })
+        //if there is an error, send the error to the client
+        .catch(err => res.json(err));
+});
 
 //save articles that you like 
-  app.post('/saved', function(req, res) {
+app.post('/saved', function (req, res) {
     db.Article.update(
-      { _id: req.params.id }, 
-      { $set: { saved: true }}, 
-      function(err, data){
-          if(err){
-              throw err;
-          }
-          res.send("Saved!")
-      }
-    );
-  });
-
-  router.get("/saved", function(req, res) {
-    db.Article.find({
-      saved: true
-    }, function(error, articles) {
-      if (error) {
-        console.log(error);
-      } else {
-        res.render("saved", {
-          data: articles
-        });
-      }
-    })
-  });
-  
-  //unsave articles 
-  app.post('/unsave/:id', function(req, res) {
-    db.Article.update(
-      { _id: req.params.id }, 
-      { $set: { saved: false }}, 
-      function(err, data){
-        if(err){
-            throw err;
+        { _id: req.params.id },
+        { $set: { saved: true } },
+        function (err, data) {
+            if (err) {
+                throw err;
+            }
+            res.send("Saved!")
         }
-        res.send("Unsaved!")
-    }
     );
-  });
+});
 
-  //add a comment/note
-  app.post('/add/:id', function(req, res) {
+router.get("/saved", function (req, res) {
+    db.Article.find({
+        saved: true
+    }, function (error, articles) {
+        if (error) {
+            console.log(error);
+        } else {
+            res.render("saved", {
+                data: articles
+            });
+        }
+    })
+});
+
+//unsave articles 
+app.post('/unsave/:id', function (req, res) {
+    db.Article.update(
+        { _id: req.params.id },
+        { $set: { saved: false } },
+        function (err, data) {
+            if (err) {
+                throw err;
+            }
+            res.send("Unsaved!")
+        }
+    );
+});
+
+//add a comment/note
+app.post('/add/:id', function (req, res) {
     db.Note
         //create note with body of the comment or note
-      .create(req.body)
-      //once you have created that, 
-      .then( dbNote => {
-          //update the Article db with the note collection
-        db.Article.update(
-          { _id: req.params.id }, 
-          { $set: {note: dbNote._id} },
-          {multi: true},
-          (err, num) => {
-            if (err) throw err;
-            res.send('Added');
-          }
-        )
-      })
-      .catch(err => res.json(err) );
-  });
+        .create(req.body)
+        //once you have created that, 
+        .then(dbNote => {
+            //update the Article db with the note collection
+            db.Article.update(
+                { _id: req.params.id },
+                { $set: { note: dbNote._id } },
+                { multi: true },
+                (err, num) => {
+                    if (err) throw err;
+                    res.send('Added');
+                }
+            )
+        })
+        .catch(err => res.json(err));
+});
 
-   // Remove the note
-   app.post('/sub/:id1/:id2', function(req, res) {
+// Remove the note
+app.post('/sub/:id1/:id2', function (req, res) {
     db.Note.remove(
         //remove the data for article note from the notes db
-      { _id: req.params.id2 }, 
-      (err, num) => {
-        if (err) throw err;
-      })
-      .then( dbNote => {
-          //make the noted in the db empty at that article id from the articles db
-        db.Article.update(
-          { _id: req.params.id1 }, 
-          { $unset: {note: ''} },
-          (err, num) => {
+        { _id: req.params.id2 },
+        (err, num) => {
             if (err) throw err;
-            res.send('Removed Note');
-          }
-        )
-      })
-      .catch(err => res.json(err) );
+        })
+        .then(dbNote => {
+            //make the noted in the db empty at that article id from the articles db
+            db.Article.update(
+                { _id: req.params.id1 },
+                { $unset: { note: '' } },
+                (err, num) => {
+                    if (err) throw err;
+                    res.send('Removed Note');
+                }
+            )
+        })
+        .catch(err => res.json(err));
 
-    //Edit the note content
-        app.post('/edit/:id', function(req, res) {
-        db.Note.update(
-            { _id: req.params.id }, 
-            { $set: { text: req.body.text }}, 
-            (err, data) => {
-                if (err) throw err;
-             res.send('Edited');
-      }
+//Edit the note content
+app.post('/edit/:id', function (req, res) {
+    db.Note.update(
+        { _id: req.params.id },
+        { $set: { text: req.body.text } },
+        (err, data) => {
+            if (err) throw err;
+            res.send('Edited Note');
+        }
     )
-  }); 
-  });
- 
+});
+});
