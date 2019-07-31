@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/takatanium/news-scraper.git"
+    "url": "git+https://github.com/meghabprasad/tech-news-scraper.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/takatanium/news-scraper/issues"
+    "url": "https://github.com/meghabprasad/tech-news-scraper/issues"
   },
-  "homepage": "https://github.com/takatanium/news-scraper#readme",
+  "homepage": "https://github.com/meghabprasad/tech-news-scraper",
   "dependencies": {
     "body-parser": "^1.18.2",
     "cheerio": "^1.0.0-rc.2",
