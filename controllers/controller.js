@@ -1,7 +1,7 @@
 const express = require('express');
 const cheerio = require('cheerio');
 const request = require('request');
-const db = require('../models/');
+const db = require('../models');
 
 let maxArticles = 8;
 
