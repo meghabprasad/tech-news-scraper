@@ -1,150 +1,114 @@
 const express = require('express');
 const cheerio = require('cheerio');
+const request = require('request');
 const db = require('../models/');
-const axios = require("axios");
-var mongoose = require("mongoose");
 
-mongoose.connect("mongodb://localhost/techNews", { useNewUrlParser: true });
+let maxArticles = 8;
 
-// Initialize Express
-// const app = express();
-var router = express.Router();
+module.exports = (app) => {
+  // Scrape ECHO JS Website
+  app.get('/scrape', (req, res) => {
+    request('http://www.echojs.com/', (error, response, body) => {
+      if (error) throw error;
 
+      const $ = cheerio.load(body);
 
-    router.get("/scrape", function (req, res) {
-        // Make a request via axios for the news section of `ycombinator`
-        axios.get("https://news.ycombinator.com/").then(function (response) {
-            // Load the html body from axios into cheerio
-            var $ = cheerio.load(response.data);
-            // For each element with a "title" class
-            $(".title").each(function (i, element) {
-                // Save the text and href of each link enclosed in the current element
-                let result = {};
-                result.title = $(element).children("a").text();
-                result.link = $(element).children("a").attr("href");
-    
-    
-    
-                // If this found element had both a title and a link
-                if (result.title && result.link) {
-                    // Insert the data in the scrapedData db
-                    db.Article
-                        .create(result)
-                        .then(function (dbArticle) {
-                            res.send();
-                            console.log(dbArticle);
-                        })
-                        .catch(function (err) {
-                            res.json(err);
-                            console.log(err);
-                        });
-                };
-            });
-        });
-    });
-    
-    //retrieve data from our mongodb  (database: techNews, collection: Article) 
-    //gets all info about article including related saves and comments
-    
-    router.get('/', (req, res) => {
-        db.Article
-            //find all the articles in the collection  
-            .find({})
-            //sort the articles by date scraped
-            .sort({dateScraped: -1})
-            //get another collection related to the articles
-            .populate('note')
-            //once you have all the info
-            .then(dbArticle => {
-                //send the info to index
-                res.render('', { data: dbArticle });
-            })
-            //if there is an error, send the error to the client
+      $('article h2').each( function (i, element) {
+
+        if (i < maxArticles) {
+          let result = {};
+
+          result.title = $(this)
+            .children('a')
+            .text();
+
+          result.link = $(this)
+            .children('a')
+            .attr('href');
+            
+          db.Article
+            .create(result)
+            .then(r => res.send())
             .catch(err => res.json(err));
+        } else {
+          return false;
+        }
+      });
     });
-    
-    //save articles that you like 
-    router.post('/save/:id', function (req, res) {
+  });
+
+  // Retrieve the articles in collection 
+  app.get('/', (req, res) => {
+    db.Article
+      .find({})
+      .sort({dateScraped: -1})
+      .populate('note')
+      .then(dbArticle => { 
+        res.render('index', {data: dbArticle});
+      })
+      .catch(err => res.json(err) );
+  });
+
+  // Save an article
+  app.post('/save/:id', function(req, res) {
+    db.Article.update(
+      { _id: req.params.id }, 
+      { $set: { saved: true }}, 
+      (err, data) => {
+        if (err) throw err;
+        res.send('Saved');
+      }
+    );
+  });
+
+  // Unsave an article
+  app.post('/unsave/:id', function(req, res) {
+    db.Article.update(
+      { _id: req.params.id }, 
+      { $set: { saved: false }}, 
+      (err, num) => {
+        if (err) throw err;
+        res.send('Unsaved');
+      }
+    );
+  });
+
+  // Add the note information
+  app.post('/add/:id', function(req, res) {
+    db.Note
+      .create(req.body)
+      .then( dbNote => {
         db.Article.update(
-            { _id: req.params.id },
-            { $set: { saved: true } },
-            function (err, data) {
-                if (err) {
-                    throw err;
-                }
-                res.send("Saved!")
-            }
-        );
-    });
-    
-    //unsave articles 
-    router.post('/unsave/:id', function (req, res) {
-        db.Article.update(
-            { _id: req.params.id },
-            { $set: { saved: false } },
-            function (err, data) {
-                if (err) {
-                    throw err;
-                }
-                res.send("Unsaved!")
-            }
-        );
-    });
-    
-    //add a comment/note
-    router.post('/add/:id', function (req, res) {
-        db.Note
-            //create note with body of the comment or note
-            .create(req.body)
-            //once you have created that, 
-            .then(dbNote => {
-                //update the Article db with the note collection
-                db.Article.update(
-                    { _id: req.params.id },
-                    { $set: { note: dbNote._id } },
-                    { multi: true },
-                    (err, num) => {
-                        if (err) throw err;
-                        res.send('Added');
-                    }
-                )
-            })
-            .catch(err => res.json(err));
-    });
-    
-    // Remove the note
-    router.post('/sub/:id1/:id2', function (req, res) {
-        db.Note.remove(
-            //remove the data for article note from the notes db
-            { _id: req.params.id2 },
-            (err, num) => {
-                if (err) throw err;
-            })
-            .then(dbNote => {
-                //make the noted in the db empty at that article id from the articles db
-                db.Article.update(
-                    { _id: req.params.id1 },
-                    { $unset: { note: '' } },
-                    (err, num) => {
-                        if (err) throw err;
-                        res.send('Removed Note');
-                    }
-                )
-            })
-            .catch(err => res.json(err));
-    
-    //Edit the note content
-    router.post('/edit/:id', function (req, res) {
-        db.Note.update(
-            { _id: req.params.id },
-            { $set: { text: req.body.text } },
-            (err, data) => {
-                if (err) throw err;
-                res.send('Edited Note');
-            }
+          { _id: req.params.id }, 
+          { $set: {note: dbNote._id} },
+          {multi: true},
+          (err, num) => {
+            if (err) throw err;
+            res.send('Added');
+          }
         )
-    });
-    });
-    
-module.exports = router;
+      })
+      .catch(err => res.json(err) );
+  });
 
+  // Subtract the note
+  app.post('/sub/:id1/:id2', function(req, res) {
+    db.Note.remove(
+      { _id: req.params.id2 }, 
+      (err, num) => {
+        if (err) throw err;
+      })
+      .then( dbNote => {
+        db.Article.update(
+          { _id: req.params.id1 }, 
+          { $unset: {note: ''} },
+          (err, num) => {
+            if (err) throw err;
+            res.send('Sutracted');
+          }
+        )
+      })
+      .catch(err => res.json(err) );
+  });
+
+};

@@ -1,6 +1,6 @@
 html,
 body {
-  font-family: "Courier New", Courier, monospace;
+  font-family: 'Raleway', sans-serif;
   font-size: 16px;
   background-color: hsl(0,0%,90%);
   height: 99vh;
@@ -16,7 +16,14 @@ header {
   font-size: 50px;
   margin: 20px 20px 5px 20px;
 }
-
+.jumbotron {
+  background-image: url("background-image.jpg");
+  background-size: 100%;
+  opacity: 0.8;
+}
+.jumbotron-text{
+  color: white;
+}
 main {
   flex: 1;
   padding: 10px;
@@ -52,7 +59,6 @@ h4 {
 
 section {
   flex: 1;
-  border: solid hsl(0,0%,0%) 1px;
   padding: 10px;
   overflow-y: auto;
 }
@@ -103,8 +109,8 @@ a:hover,
 .plus:hover,
 .minus:hover,
 .edit:hover {
-  color: hsl(0,0%,60%);
-  border-color: hsl(0,0%,60%);
+  color: blue;
+  border-color: white;
 }
 
 .content {
@@ -120,10 +126,7 @@ a:hover,
   cursor: pointer;
 }
 
-.box,
-.arrow {
-  margin-right: 5px;
-}
+
 
 .plus,
 .minus,

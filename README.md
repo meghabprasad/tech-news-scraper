@@ -1,1 +1,1 @@
-# tech-news-scraper
+# news-scraper
